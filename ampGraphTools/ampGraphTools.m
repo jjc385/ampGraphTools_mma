@@ -31,7 +31,10 @@ ampGraphTools`Private`defaultDeclaredSymbols = {
 	cutDisplayRule,
 	neckl,
 	vertexFormGraph,
-	addLeg
+	addLeg,
+	getExtLegs,
+	k, 	(* this will very likely cause shadowing at some point *)
+	in  (* this will very likely cause shadowing at some point *)
 }
 
 (* ::Subsubsection::Closed:: *)
