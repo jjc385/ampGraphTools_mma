@@ -34,7 +34,48 @@ ampGraphTools`Private`defaultDeclaredSymbols = {
 	addLeg,
 	getExtLegs,
 	k, 	(* this will very likely cause shadowing at some point *)
-	in  (* this will very likely cause shadowing at some point *)
+	in, (* this will very likely cause shadowing at some point *)
+	l, 	(* this will very likely cause shadowing at some point *)
+	treesToLoopsUO,
+	priveledgeLegs,
+	stripPriveledge,
+	opTillClosure,
+	opTillClosureOnCollection,
+	tHat,
+	uHat,
+	doOrderedPlotRand,
+	toGraph,
+	getVertices,
+	sewGraphs,
+	graphHashCode,
+	mathematicaGraph,
+	isIsomorphic,
+	uLsq,
+	ulp,
+	getCOGraphContribution,
+	getIndepRules,
+	isomorphicEdgeRule,
+	canonVertexList,
+	colorForm,
+	NoDressing, 		(* not 100% sure this should be public *)
+	extRule,			(* not 100% sure this should be public *)
+	mhvTreeRules,
+	FermionArrowSign,
+	complexSpinorProd,
+	evaluateLpRule,
+	evaluateLsqRule,
+	getTheProcessedCut,
+	PREC, 		(* not 100% sure this should be public *)
+	buildAllMomenta,
+	refreshHLP,
+	getRandomNullVector,
+	flattenMomenta,
+	getOffShellDots,
+	getNumerator,
+	getAllNumerators,
+	getKRules2,
+	consistentGraphToTrees,
+	evaluateKltCut
 }
 
 (* ::Subsubsection::Closed:: *)
