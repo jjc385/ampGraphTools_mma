@@ -526,7 +526,7 @@ concatenateNecklaces[necklaces__] :=
     Module[ {newForm = necklaces,nextEdge},
         While[(nextEdge = getAConnectingEdge[newForm]) ~UnsameQ~ {},
         newForm = mergeEdge[newForm,nextEdge[[1]]];
-];
+		];
         If[ Length[newForm]>1,
             Throw[Error["Distinct Graphs present in concatenate",necklaces,newForm]],
             newForm[[1]]
