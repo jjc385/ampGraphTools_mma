@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-(* ::Subsubsection:: *)
+(* ::Subsection:: *)
 (*Open*)
 
 
@@ -19,11 +19,19 @@ StylePrint["Also loaded ampGraphTools`jjc385`,
 	Jared Claypoole's supplement"]
 
 
+myAddLeg::usage = "Version of `addLeg` which will thread over lists 
+	in its first argument.  
+	It might be more useful to use my function `listable` instead."
 
-(* ::Subsubsection:: *)
-(* Some stuff *)
 
-ClearAll[myAddLeg]
+
+(* ::Subsection:: *)
+(* Private stuff *)
+
+Begin["`Private`"]
+(* Implementation of the package *)
+
+(*ClearAll[myAddLeg]*)
 
 (* Version of addLeg which will thread over lists in its first argument *)
 myAddLeg[ list_List, args___ ] := myAddLeg[#, args]& /@ list
@@ -51,8 +59,6 @@ myThread[ f_ ][ args__ ] := (
 
 
 
-Begin["`Private`"]
-(* Implementation of the package *)
 
 
 
