@@ -31,7 +31,8 @@ ampGraphTools`Private`defaultDeclaredSymbols = {
 	cutDisplayRule,
 	neckl,
 	vertexFormGraph,
-	addLeg
+	addLeg,
+	getExtLegs
 }
 
 (* ::Subsubsection::Closed:: *)
