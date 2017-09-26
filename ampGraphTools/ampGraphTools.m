@@ -22,6 +22,19 @@ therein. - dr.jjmc@gmail.com."]
 
 
 (* ::Subsubsection::Closed:: *)
+(* Declare public symbols *)
+
+ampGraphTools`Private`defaultDeclaredSymbols = {
+	Atree,
+	treesToLoops,
+	doOrderedPlot,
+	cutDisplayRule,
+	neckl,
+	vertexFormGraph,
+	addLeg
+}
+
+(* ::Subsubsection::Closed:: *)
 (*Private Methods *)
 
 
