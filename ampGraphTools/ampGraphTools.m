@@ -21,6 +21,26 @@ ideas in http://arxiv.org/abs/arXiv:1506.00974 and refs
 therein. - dr.jjmc@gmail.com."]
 
 
+(* ::Subsubsection::Closed:: *)
+(* Declare public symbols *)
+
+ampGraphTools`Private`defaultDeclaredSymbols = {
+	Atree,
+	treesToLoops,
+	doOrderedPlot,
+	cutDisplayRule,
+	neckl,
+	vertexFormGraph,
+	addLeg
+}
+
+(* ::Subsubsection::Closed:: *)
+(*Private Methods *)
+
+
+Begin["`Private`"]
+(* Implementation of the package *)
+
 
 (* ::Subsubsection:: *)
 (*Some raw graphs *)
@@ -35,6 +55,9 @@ nGonGraph[nn_] :=
     (Join[consistentGraphToTrees[simpleBoxGraph]/.-l[ 4]:>-l[ nn],
     Table[Atree[{k[ i],l[ i],-l[ i-1]}],{i,5,nn}]]/.l[ a_]:>l[ a])/.l[ a_]:>l[ a+nn]//toGraph
 
+(* AppendTo[$Path, 
+	"C:\\Users\\Jared\\Documents\\google-drive\\github\\mmaLibrary\\jjcLib\\"];
+	*)
 lRuleForGraphBuilding[mm_,ll_] :=
     Module[ {nn = mm+2 (ll-1)},
         Thread[Rule[
@@ -4369,13 +4392,6 @@ cutSumFormat[cut__] :=
              Tally, #[[2]]  ~SameQ~  2 &]], StylePrint}, StylePrint[myRule]; 
        myRule]]], Large]]
 
-
-(* ::Subsubsection::Closed:: *)
-(*Private Methods & Close*)
-
-
-Begin["`Private`"]
-(* Implementation of the package *)
 
 
 
