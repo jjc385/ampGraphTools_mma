@@ -23,6 +23,7 @@ myAddLeg::usage = "Version of `addLeg` which will thread over lists
 	in its first argument.  
 	It might be more useful to use my function `listable` instead."
 
+listable::usage = "Repeatedly thread nth argument of a function over lists"
 
 
 (* ::Subsection:: *)
@@ -38,8 +39,7 @@ myAddLeg[ list_List, args___ ] := myAddLeg[#, args]& /@ list
 myAddLeg[ nonList_, args___ ] := Inactive[addLeg][ nonList, args ]
 
 
-ClearAll[listable]
-
+(* ClearAll[listable] *)
 listable[f_,n_:1][args__] := 
 	With[ {x = {args}[[n]] },
 		If[ Head@x === List, 
