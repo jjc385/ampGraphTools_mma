@@ -75,7 +75,13 @@ ampGraphTools`Private`defaultDeclaredSymbols = {
 	getAllNumerators,
 	getKRules2,
 	consistentGraphToTrees,
-	evaluateKltCut
+	evaluateKltCut,
+	fancyFormatOn,
+	fancyFormatOff,
+	Nc,
+	a, 		(* not 100% sure this should be public *)
+	tr,
+	SUSY
 }
 
 (* ::Subsubsection::Closed:: *)
