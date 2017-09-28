@@ -607,6 +607,12 @@ concatenateNecklaces[necklaces__] :=
     ]
 
 Clear[newGraph];
+(* 
+	* Replace leg `old` with an extra propagator, `in[m+1]`
+	* exra propagator connects to extra vertex, 
+		along with leg `old` and new leg `new`
+	* returns list of new graphs
+*)
 newGraph[vertexFormGraph[neck_],old_,new_,{leftBound_,rightBound_}] :=
     Module[ {newA, newB,numConnecting,replEdge,necklaces = neck,StylePrint},
         numConnecting = Length[getConnectingEdges[necklaces]];
@@ -650,6 +656,8 @@ newGraphUO[vertexFormGraph[neck_],old_,new_,{leftBound_,rightBound_}] :=
 
 Protect[vertexFormGraph]
 
+(* genrerate all color ordered graphs which insert new external leg `new` between
+	existing external legs `i` and `j` *)
 addLeg[vertexFormGraph[necklaces__],new_,{i_,j_}] :=
     Module[ {StylePrint,edges = Union[inSetRightOfALeftOfB[i,j,concatenateNecklaces[necklaces]]/.merged[a_,b_]:>merged@@Sort[{a,b}]]}(* only consider each edge once *),
         StylePrint[edges];
