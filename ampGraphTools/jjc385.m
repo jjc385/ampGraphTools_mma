@@ -25,6 +25,11 @@ myAddLeg::usage = "Version of `addLeg` which will thread over lists
 
 listable::usage = "Repeatedly thread nth argument of a function over lists"
 
+getLegs::usage = "Get all legs (external and internal)"
+getIntLegs::usage = "Get all internal legs"
+
+hasTriangleQ::usage = "Check whether a graph has at least one triangle"
+
 
 (* ::Subsection:: *)
 (* Private stuff *)
@@ -56,8 +61,18 @@ myThread[ f_ ][ args__ ] := (
 		// MapAt[ First, #, 0 ]&
 	)
 
+getLegs[ graph : vertexFormGraph[necklist : {__neckl}] ] := (
+	Flatten[List @@@ necklist, Range[1, 3]] 
+		// Map@Replace[-x_ :> x] 
+		// Union
+)
 
+getIntLegs[ graph : vertexFormGraph[necklist : {__neckl}] ] := 
+	Complement[ getLegs[graph], getExtLegs[graph] ]
 
+hasTriangleQ[ graph_vertexFormGraph ] :=
+	Length @ FindCycle[ mathematicaGraph[graph], {3} ] > 0
+	
 
 
 
