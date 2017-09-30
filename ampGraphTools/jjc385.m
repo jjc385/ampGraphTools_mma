@@ -30,6 +30,7 @@ getIntLegs::usage = "Get all internal legs"
 
 hasTriangleQ::usage = "Check whether a graph has at least one triangle"
 
+myIGFindIsomorphisms::usage = "Find isomorphisms.  Colors edges to find multigraph isomorphisms with IGraphM"
 
 (* ::Subsection:: *)
 (* Private stuff *)
@@ -74,6 +75,17 @@ hasTriangleQ[ graph_vertexFormGraph ] :=
 	Length @ FindCycle[ mathematicaGraph[graph], {3} ] > 0
 	
 
+(* From Alex *)
+(* Essentially described here:  https://mathematica.stackexchange.com/a/97127/11035 *)
+myIGFindIsomorphisms[gr1_,gr2_]:=
+	Module[{colors1,colors2},
+		colors1 = Counts[Sort/@EdgeList[gr1]];
+		colors2 = Counts[Sort/@EdgeList[gr2]];
+		IGraphM`IGVF2FindIsomorphisms[
+			{Graph@Keys[colors1],"EdgeColors"->colors1},
+			{Graph@Keys[colors2],"EdgeColors"->colors2}
+		]
+	]
 
 
 
