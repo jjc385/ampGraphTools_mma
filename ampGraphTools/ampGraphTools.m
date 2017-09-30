@@ -81,7 +81,9 @@ ampGraphTools`Private`defaultDeclaredSymbols = {
 	Nc,
 	a, 		(* not 100% sure this should be public *)
 	tr,
-	SUSY
+	SUSY,
+	merged,
+	concatenateNecklaces
 }
 
 (* ::Subsubsection::Closed:: *)
