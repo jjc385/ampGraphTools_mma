@@ -42,6 +42,8 @@ addLegAt::usage = "Adds the given new leg to the specified old leg or propagator
 mytHat::usage = "Transforms the given propagator from 's' to 't' configuration"
 myuHat::usage = "Transforms the given propagator from 's' to 'u' configuration"
 
+isIntIsomorphic::usage = "Test whethere graphs are identical up to relabeling internal legs"
+
 
 (* ::Subsection:: *)
 (* Private stuff *)
@@ -191,6 +193,31 @@ $jacobiReplace[graph : vertexFormGraph[{neckl___neckl}], prop_,
    // ReplacePart[graph, Most /@ verts -> # // Thread ] &
   ]
  
+
+
+(* Check whether graphs are identical up to relabeling internal legs *)
+(* this implementation relies upon listing all isomorphism between \
+the two graphs *)
+Options[isIntIsomorphic] = {
+   (*"ignoreBubblesQ"\[Rule]True*)
+   "findIsomorphismFcn" -> ampGraphTools`jjc385`myIGFindIsomorphisms
+   };
+
+isIntIsomorphic[g1_, g2_, OptionsPattern[] ] := (
+  (*If[OptionValue["ignoreBubbles"]===False,Throw[
+  "isIntIsomorphic:  Handling of bubbles is not implemented"]];*)
+  With[{extLegs = getExtLegs /@ {g1, g2}},
+   If[! SameQ @@ Length /@ extLegs, Return[False]];
+   If[! SameQ @@ Sort /@ extLegs, Return[False]]; (* 
+   Assumes this sorting is quicker than finding all graph isomorphisms *)
+   OptionValue["findIsomorphismFcn"][
+      mathematicaGraph /@ {g1, g2} // Apply@Sequence]
+     // Select[#, 
+       With[{extList = neckl@*List /@ Minus /@ getExtLegs[g1]}, 
+         SameQ[extList, extList /. #]] &, 1] &
+    // Length@# > 0 &
+   ]
+  )
 
 
 
