@@ -25,6 +25,12 @@ myAddLeg::usage = "Version of `addLeg` which will thread over lists
 
 listable::usage = "Repeatedly thread nth argument of a function over lists"
 
+getLegs::usage = "Get all legs (external and internal)"
+getIntLegs::usage = "Get all internal legs"
+
+hasTriangleQ::usage = "Check whether a graph has at least one triangle"
+
+myIGFindIsomorphisms::usage = "Find isomorphisms.  Colors edges to find multigraph isomorphisms with IGraphM"
 
 (* ::Subsection:: *)
 (* Private stuff *)
@@ -56,9 +62,30 @@ myThread[ f_ ][ args__ ] := (
 		// MapAt[ First, #, 0 ]&
 	)
 
+getLegs[ graph : vertexFormGraph[necklist : {__neckl}] ] := (
+	Flatten[List @@@ necklist, Range[1, 3]] 
+		// Map@Replace[-x_ :> x] 
+		// Union
+)
 
+getIntLegs[ graph : vertexFormGraph[necklist : {__neckl}] ] := 
+	Complement[ getLegs[graph], getExtLegs[graph] ]
 
+hasTriangleQ[ graph_vertexFormGraph ] :=
+	Length @ FindCycle[ mathematicaGraph[graph], {3} ] > 0
+	
 
+(* From Alex *)
+(* Essentially described here:  https://mathematica.stackexchange.com/a/97127/11035 *)
+myIGFindIsomorphisms[gr1_,gr2_]:=
+	Module[{colors1,colors2},
+		colors1 = Counts[Sort/@EdgeList[gr1]];
+		colors2 = Counts[Sort/@EdgeList[gr2]];
+		IGraphM`IGVF2FindIsomorphisms[
+			{Graph@Keys[colors1],"EdgeColors"->colors1},
+			{Graph@Keys[colors2],"EdgeColors"->colors2}
+		]
+	]
 
 
 
