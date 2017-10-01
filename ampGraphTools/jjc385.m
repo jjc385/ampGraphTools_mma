@@ -32,6 +32,17 @@ hasTriangleQ::usage = "Check whether a graph has at least one triangle"
 
 myIGFindIsomorphisms::usage = "Find isomorphisms.  Colors edges to find multigraph isomorphisms with IGraphM"
 
+graphFormatOn::usage = "Format vertexFormGraphs using doOrderedPlot on the (sorted) external legs"
+graphFormatOff::usage = "Format vertexFormGraphs in the normal way (JJMC's StandardForm)"
+
+addLoop::usage = "Adds one loop in all possible locations"
+addLoopAt::usage = "Adds one loop, connecting to the given propagators"
+addLegAt::usage = "Adds the given new leg to the specified old leg or propagator"
+
+mytHat::usage = "Transforms the given propagator from 's' to 't' configuration"
+myuHat::usage = "Transforms the given propagator from 's' to 'u' configuration"
+
+
 (* ::Subsection:: *)
 (* Private stuff *)
 
@@ -86,6 +97,100 @@ myIGFindIsomorphisms[gr1_,gr2_]:=
 			{Graph@Keys[colors2],"EdgeColors"->colors2}
 		]
 	]
+
+graphFormatOn :=
+ (
+  Unprotect@vertexFormGraph;
+  Format[graph : vertexFormGraph[{__neckl}] ] := 
+   doOrderedPlot[graph, Sort@getExtLegs@graph];
+  Protect@vertexFormGraph;
+  )
+graphFormatOff :=
+ (
+  Unprotect@vertexFormGraph;
+  Format[graph : vertexFormGraph[{__neckl}] ] =.;
+  Protect@vertexFormGraph;
+  )
+
+
+
+
+(* 
+* adds an internal propagator in all possible locations 
+* returns list of new vertexFormGraphs
+* eliminates bubbles (largely because mathematica doesn't play well \
+with them)
+*)
+(* TODO -- option to include bubbles or not *)
+(* TODO -- consider option to kill triangles *)
+
+addLoop[ graph : vertexFormGraph[necklist : List[__neckl]], 
+  loopProp_: Automatic ] :=
+ Module[{edges = 
+    First@concatenateNecklaces@necklist /. 
+      merged[a_, b_] :> 
+       First@Sort@{a, b} (*x_merged\[RuleDelayed]MapAt[Sort,x,1]*) // 
+     Union},
+  Table[
+    addLoopAt[graph, edges[[i]], edges[[j]], loopProp ],
+    {i, Length@edges},
+    {j, i + 1, Length@edges}
+    ] // Catenate
+  ]
+
+addLoopAt[ graph : vertexFormGraph[necklist : List[__neckl]], start_, 
+  end_, loopProp_: Automatic ] := (
+  (*Print@HoldForm[addLoopAt["graph",start,end,loopProp]];*)
+  Module[{a, b, working = graph,
+    nProps0 = 
+     Length@ampGraphTools`Private`getConnectingEdges@necklist, 
+    loopPropActual},
+   loopPropActual = 
+    If[loopProp === Automatic, in[1 + nProps0++], loopProp];
+   (* collapse merged legs *)
+   {a, b} = {start, end}(*/.{merged@{i_,-i_}|merged@{-i_,
+   i_}\[RuleDelayed]i,merged@{i_,j_}\[RuleDelayed]i}*);
+   If[! FreeQ[{a, b}, merged], Print["Problem!"]];
+   working = addLegAt[working, a, loopPropActual, in[1 + nProps0++]];
+   working = addLegAt[working, b, -loopPropActual, -in[1 + nProps0++]]
+   ]
+  )
+
+addLegAt[ graph : vertexFormGraph[necklist : List[__neckl]], old_, 
+  new_, newProp_: Automatic ] := (
+  Module[{pos = Position[First@graph, old, {3}] // Map[Prepend@1], 
+    nProps0 = Length@ampGraphTools`Private`getConnectingEdges@necklist,
+    prop},
+   prop = If[newProp === Automatic, in[nProps0 + 1], newProp];
+   If[Length@pos > 1, Throw["Old leg is ambiguous"]];
+   MapAt[prop &, graph, First@pos]
+    // MapAt[Append[neckl@{-prop, old, new}], #, 1] &
+   ]
+  )
+
+
+
+
+mytHat[graph_, prop_] := $jacobiReplace[graph, 
+  prop, {{p1_, a_, b_}, {p2_, c_, d_}} :> {{p1, b, c}, {p2, d, a}}]
+
+myuHat[graph_, prop_] := $jacobiReplace[graph, 
+  prop, {{p1_, a_, b_}, {p2_, c_, d_}} :> {{p1, d, b}, {p2, c, a}}]
+
+(* Sample form for rule:  {{prop1_,a_,b_},{prop2_,c_,d_}}\
+\[RuleDelayed]{{prop1,b,c},{prop2,d,a}} *)
+$jacobiReplace[graph : vertexFormGraph[{neckl___neckl}], prop_, 
+  rule : (_Rule | _RuleDelayed)] :=
+ With[{verts = (Prepend[1] /@ 
+         Position[First@graph, #, {3}]) & /@ {prop, -prop} // 
+     Catenate},
+  If[Length@verts =!= 2, 
+   Throw["mytHat applied to non-unique propagator"] ];
+  RotateLeft[Extract[graph, Most@#], Last@# - 1] & /@ verts
+    // Replace[rule]
+   // ReplacePart[graph, Most /@ verts -> # // Thread ] &
+  ]
+ 
 
 
 
