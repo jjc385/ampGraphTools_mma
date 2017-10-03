@@ -44,6 +44,15 @@ myuHat::usage = "Transforms the given propagator from 's' to 'u' configuration"
 
 isIntIsomorphic::usage = "Test whethere graphs are identical up to relabeling internal legs"
 
+jacobiOpStep::usage = "Apply jacobi operators (mytHat and myuHat) \
+						to all propagators of the supplied graph"
+
+jacobiOpUntilClosure::usage = "Apply jacobi operators (mytHat and myuHat) \
+						to all propagators of the supplied graph \
+						until no new graphs are generated"
+
+$dup::usage = "Default head applied to mark duplicate graphs from jacobi stepping functions"
+
 
 (* ::Subsection:: *)
 (* Private stuff *)
@@ -243,6 +252,78 @@ isIntIsomorphic[g1_vertexFormGraph, g2_vertexFormGraph, OptionsPattern[] ] := (
    ]
   )
 
+Options[jacobiOpStep] = {
+   "reduceGraphsQ" -> True,(* eliminate duplicate graphs from output *) 
+   "knownGraphs" -> Automatic,
+   "duplicateGraphFcn" -> Automatic
+   };
+jacobiOpStep[graph : _vertexFormGraph, OptionsPattern[] ] :=
+ Module[{knownGraphs = OptionValue["knownGraphs"], 
+   duplicateFcn = OptionValue["duplicateGraphFcn"], temp},
+  knownGraphs = Switch[knownGraphs,
+    None, {},
+    Automatic, {graph},
+    Hold[_Symbol], First@knownGraphs,
+    _, knownGraphs
+    ];
+  duplicateFcn = Switch[duplicateFcn,
+    Automatic | None, (# &),
+    _, duplicateFcn
+    ];
+  Catenate@
+      Table[  op[graph, prop], {prop, 
+        getIntLegs@graph}, {op, {mytHat, myuHat}}]
+     // If[TrueQ@OptionValue["reduceGraphsQ"], 
+       Function[g,
+         If[Length@(temp =
+              Select[knownGraphs, isIntIsomorphic[#, g] &, 1]
+             ) > 0,
+          duplicateFcn[First@temp, g],
+          AppendTo[knownGraphs, g]; g
+          ]
+         ] /@ #
+       , #] &
+    // (Sow[knownGraphs, jacobiOpStep -> "knownGraphsEnd"]; #) &
+   // If[MatchQ[OptionValue["knownGraphs"], Hold[_Symbol]],
+     OptionValue["knownGraphs"] /. 
+      Hold[l_Symbol] :> (l = knownGraphs); #
+     , #] &
+  ]
+
+
+Options[jacobiOpUntilClosure] = {"maxIterationDepth" -> Infinity}
+jacobiOpUntilClosure[graph_vertexFormGraph, OptionsPattern[] ] :=
+ Module[{knownGraphs = List@graph, jacobiEdges = <||>, 
+   jacobiStepGraphFcn, jacobiStepListFcn},
+  Block[{$dup},
+   jacobiStepGraphFcn =
+    (* expects a vertexFormGraph as an argument *)
+    Module[{newList},
+      (* produce a new list of `graph \[Rule] { 
+      related graphs }` edges *) 
+      # -> (newList = 
+          jacobiOpStep[#, "knownGraphs" -> Hold@knownGraphs, 
+           "duplicateGraphFcn" -> ($dup[#] &)])
+       (* append those edges to `jacobiEdges` *)
+       // (AssociateTo[jacobiEdges, #] &);
+      newList
+      ] &;
+   jacobiStepListFcn =
+    (* expects a list as an argument *)
+    (
+     Map[jacobiStepGraphFcn] /* 
+      Catenate /* (Replace[#, _$dup -> Nothing, 1] &)
+     );
+   Internal`InheritedBlock[{jacobiOpStep},
+    jacobiOpStep[
+      x : _$dup | _$tadpoleJacobi, ___] := x;
+    
+    NestWhile[jacobiStepListFcn, {graph}, Length@# > 0 &, 1, 
+     OptionValue@"maxIterationDepth"];
+    jacobiEdges
+    ]
+   ]
+  ]
 
 
 End[]
