@@ -90,7 +90,12 @@ hasTriangleQ[ graph_vertexFormGraph ] :=
 
 (* From Alex *)
 (* Essentially described here:  https://mathematica.stackexchange.com/a/97127/11035 *)
-myIGFindIsomorphisms[gr1_,gr2_]:=
+myIGFindIsomorphisms[gr1_,gr2_]:= (
+	(* The original code fails if one graph is a multigraph and the other
+		isn't.  To fix this, realize that such graphs will never be isomorphic
+		and return early. *)
+	If[ ! SameQ @@ MultigraphQ /@ {gr1, gr2}, Return@{} ]; (* return early if
+		only one graph is a multigraph *)
 	Module[{colors1,colors2},
 		colors1 = Counts[Sort/@EdgeList[gr1]];
 		colors2 = Counts[Sort/@EdgeList[gr2]];
@@ -99,6 +104,7 @@ myIGFindIsomorphisms[gr1_,gr2_]:=
 			{Graph@Keys[colors2],"EdgeColors"->colors2}
 		]
 	]
+)
 
 graphFormatOn :=
  (
@@ -181,17 +187,35 @@ myuHat[graph_, prop_] := $jacobiReplace[graph,
 
 (* Sample form for rule:  {{prop1_,a_,b_},{prop2_,c_,d_}}\
 \[RuleDelayed]{{prop1,b,c},{prop2,d,a}} *)
-$jacobiReplace[graph : vertexFormGraph[{neckl___neckl}], prop_, 
+$jacobiReplace[graph : vertexFormGraph[necklist:{__neckl}], prop_, 
   rule : (_Rule | _RuleDelayed)] :=
- With[{verts = (Prepend[1] /@ 
-         Position[First@graph, #, {3}]) & /@ {prop, -prop} // 
-     Catenate},
-  If[Length@verts =!= 2, 
-   Throw["mytHat applied to non-unique propagator"] ];
+ Catch[ 
+ With[{
+		(* Find positions of vertices containing `prop` and `-prop` *)
+ 		verts = 
+         		Position[First@graph, #, {3}] & /@ {prop, -prop} 
+		 		(* make sure `prop` and `-prop` each appear exactly once *)
+			 	// If[Length /@ # =!= {1, 1}, 
+						Throw["jacobi operator applied to non-unique propagator"], #] &
+     			// Catenate
+				(* make sure `prop` and `-prop` appear in separate vertices *)
+				// If[First /@ # // Apply@SameQ, 
+						(* Throw["jacobi operator applied to tadpole propagator"] *)
+						(* Throw[ $tadpoleJacobi[graph, prop, rule], $tadpoleJacobi->"tadpoleReturn" ] *)
+						Throw[ Nothing , $tadpoleJacobi->"tadpoleReturn" ]
+						, #] &
+				(* convert to positions in `graph` (rather than `First@graph`) *)
+				// Map @ Prepend[1]
+	},
+   (* Rotate vertices so that `prop` and `-prop` come first *)
   RotateLeft[Extract[graph, Most@#], Last@# - 1] & /@ verts
+    (* apply jacobi rule *)
     // Replace[rule]
+   (* update graph with new vertices *)
    // ReplacePart[graph, Most /@ verts -> # // Thread ] &
-  ]
+  ],
+  $tadpoleJacobi->"tadpoleReturn" ]
+
  
 
 
@@ -203,16 +227,16 @@ Options[isIntIsomorphic] = {
    "findIsomorphismFcn" -> ampGraphTools`jjc385`myIGFindIsomorphisms
    };
 
-isIntIsomorphic[g1_, g2_, OptionsPattern[] ] := (
+isIntIsomorphic[g1_vertexFormGraph, g2_vertexFormGraph, OptionsPattern[] ] := (
   (*If[OptionValue["ignoreBubbles"]===False,Throw[
   "isIntIsomorphic:  Handling of bubbles is not implemented"]];*)
   With[{extLegs = getExtLegs /@ {g1, g2}},
    If[! SameQ @@ Length /@ extLegs, Return[False]];
    If[! SameQ @@ Sort /@ extLegs, Return[False]]; (* 
    Assumes this sorting is quicker than finding all graph isomorphisms *)
-   OptionValue["findIsomorphismFcn"][
+   	  OptionValue["findIsomorphismFcn"][
       mathematicaGraph /@ {g1, g2} // Apply@Sequence]
-     // Select[#, 
+      // Select[#, 
        With[{extList = neckl@*List /@ Minus /@ getExtLegs[g1]}, 
          SameQ[extList, extList /. #]] &, 1] &
     // Length@# > 0 &
