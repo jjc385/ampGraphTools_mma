@@ -27,7 +27,7 @@ therein. - dr.jjmc@gmail.com."]
 ampGraphTools`Private`defaultDeclaredSymbols = {
 	Atree,
 	treesToLoops,
-	doOrderedPlot,
+(* 	doOrderedPlot, *)
 	cutDisplayRule,
 	neckl,
 	vertexFormGraph,
@@ -49,9 +49,11 @@ ampGraphTools`Private`defaultDeclaredSymbols = {
 	sewGraphs,
 	graphHashCode,
 	mathematicaGraph,
-	isIsomorphic,
+(* 	isIsomorphic, *)
 	uLsq,
 	ulp,
+	graphAlgRules,
+	getGraphDenom,
 	getCOGraphContribution,
 	getIndepRules,
 	isomorphicEdgeRule,
@@ -83,8 +85,11 @@ ampGraphTools`Private`defaultDeclaredSymbols = {
 	tr,
 	SUSY,
 	merged,
-	concatenateNecklaces
+	concatenateNecklaces,
+	graphPlotForm
 }
+
+doReorderedPlot::usage = "Jared added this function."
 
 (* ::Subsubsection::Closed:: *)
 (*Private Methods *)
@@ -892,6 +897,7 @@ treesToLoopsExtFlagNoTriUO[treeList_] :=
 buildLoops[treeList__] :=
     treesToLoopsExtFlagNoTri[treeList]
 
+(* returns a list of edges, where each edge is in the form {v1->v2, momentum} *)
 graphPlotForm[vertexFormGraph[necklaces_]] :=
     Sort[
     Module[ {tmp},
@@ -1321,12 +1327,22 @@ corruptGraph[graph_] :=
 
 
 doOrderedPlot[expr_, myExtLegs_, options___] := Module[{},
+	doReorderedPlot[ expr, 
+		(
+		MapIndexed[
+		 neckl[-{#}] -> 
+		   N[{-Cos[(#2[[1]] - 3/2) 2 \[Pi]/Length[myExtLegs]], 
+			 Sin[(#2[[1]] - 3/2) 2 \[Pi]/Length[myExtLegs]]}] &, myExtLegs]
+			 // Sow[#, "doOrderedPlot"->"VertexCoordinateRules"]&),
+		options]]
+
+Options[doReorderedPlot] = { 
+		"plotOptions" -> {},
+		Epilog -> ampGraphTools`jjc385`highlightUnorderedVertices
+	}
+doReorderedPlot[ expr_, vertexCoordRules_, OptionsPattern[] ] := Module[{},
   doMomentaPlot[expr, 
-   VertexCoordinateRules -> 
-    MapIndexed[
-     neckl[-{#}] -> 
-       N[{-Cos[(#2[[1]] - 3/2) 2 \[Pi]/Length[myExtLegs]], 
-         Sin[(#2[[1]] - 3/2) 2 \[Pi]/Length[myExtLegs]]}] &, myExtLegs],
+   VertexCoordinateRules -> vertexCoordRules,
    MultiedgeStyle -> 50, 
    EdgeRenderingFunction -> (Flatten[{If[
          Head[#3 /. -a_ :> a]  ~SameQ~  l, {Dashed, Red, Arrowheads[{{.05, .75}}], 
@@ -1340,7 +1356,11 @@ doOrderedPlot[expr_, myExtLegs_, options___] := Module[{},
             Background -> Opacity[.6, White]]}, {Blue, Arrowheads[1/18], 
            Thick, Arrow[#1], 
            Text[#3, Mean[#1], Background -> Opacity[.6, White]]}]]}] &), 
-   options]]
+   OptionValue@"plotOptions" ]
+(* 		// OptionValue@Epilog *)
+  ]
+
+	
 
 doOrderedPlotRand[expr_, myExtLegs_, options___] := 
   Module[{firstRules = 
