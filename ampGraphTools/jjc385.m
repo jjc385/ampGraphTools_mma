@@ -168,7 +168,7 @@ myIGFindIsomorphisms[{gr1_Graph,opts1___},{gr2_Graph,opts2___},args___]:= (
 		colors1 = Counts[Sort/@EdgeList[gr1]];
 		colors2 = Counts[Sort/@EdgeList[gr2]];
 
-		If[ Length@Catenate[FilterRules[#,EdgeColors]& /@ {{opts1},{opts2}}]==0,	
+		If[ Length@Catenate[FilterRules[#,"EdgeColors"]& /@ {{opts1},{opts2}}]==0,	
 
 			(* No special processing required *)
 			IGraphM`IGVF2FindIsomorphisms[
@@ -708,7 +708,7 @@ jacobiOpStep[graph : _vertexFormGraph, OptionsPattern[] ] :=
 	  		{prop, Cases[getIntLegs@graph, Except@OptionValue@"propPattToAvoid"] } 
 	  ]
 	  // Catenate // Association
-	  //Sow[#,"debug"]&
+	  //Sow[#,"debug"->"toVanishTest"]&
 	  // Map[ If[ TrueQ@vanishingTest@#, vanishingFcn@#, # ] &, #, {1} ]&
 	  //Sow[#,"debug"]&
 	  //DeleteCases[#, Nothing]&
@@ -807,16 +807,28 @@ Options[jacobiOpUntilClosureSigned] =
 		"duplicateGraphFcn" -> $dup,
    		"graphClassFcn" -> None,
    		"propPattToAvoid" -> plusMinus@_l,
-		"findIsomFcn" -> findIsomorphism (* function which returns a list of isomorphisms -- only the first will be used *)
+		"findIsomFcn" -> findIsomorphism, (* function which returns a list of isomorphisms -- only the first will be used *)
+		"postProcessFcn" -> Automatic
 		};
 jacobiOpUntilClosureSigned[graph_vertexFormGraph, opts:OptionsPattern[] ] :=
-	Module[{findIsomFcn=OptionValue@"findIsomFcn"},
+	Module[{
+		findIsomFcn=OptionValue@"findIsomFcn",
+		postProcessFcn = OptionValue@"postProcessFcn"
+		},
+		postProcessFcn = Switch[ postProcessFcn,
+			Full, Map[ Replace[ $dup[a_,_,_,sign_]:>sign*a ], #, {2} ]& ,
+			Automatic, Map[ Replace[ $dup[a_,b_,_,sign_]:>sign*$dup[a,b] ], #, {2} ]& ,
+			"sign", Map[ Replace[ $dup[a_,b_,isom_,sign_]:>sign*$dup[a,b,isom] ], #, {2} ]& ,
+			None, Identity,
+			_, postProcessFcn
+		];
 		jacobiOpUntilClosure[ graph, 
-			FilterRules[{opts},{jacobiOpUntilClosure}],
+			FilterRules[{opts},Options@jacobiOpUntilClosure],
 			"duplicateGraphTest" -> (With[{isom = Replace[#, {x_, ___} :> x]}, {nonEmptyQ@#, isom, 
-				Power[-1, isomSignature@isom]}] &)@*findIsomFcn ,
+				isomSignature@isom}] &)@*findIsomFcn ,
 			"extraSameTestArgsQ" -> True
 		]
+		//postProcessFcn
 	]
 
 
@@ -968,8 +980,8 @@ Options[isomSignature] = {
    };
 isomSignature[isomAssoc_Association] := With[
   	{reorderings = isomReorderings@isomAssoc,
-		refineOutputQ = Switch[ OptionValuu@"outputForm",
-			"nSwaps"|"nswaps"|Full, False
+		refineOutputQ = Switch[ OptionValue@"outputForm",
+			"nSwaps"|"nswaps"|Full, False,
 			"plusMinus"|"plusMinus"|Automatic|_, True
 		]
 	},
